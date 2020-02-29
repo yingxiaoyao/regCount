@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>签到</title>
+        <style>
+            body {
+                padding: 30px;
+            }
+            ul {
+                list-style: none;
+                font-size: 32px;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+            li {
+                width: 200px;
+                height: 100px;
+                background: cadetblue;
+                text-align: center;
+                line-height: 100px;
+                color: #fff;
+                margin-right: 10px;
+                margin-bottom: 10px;
+            }
+
+            #dialog {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                display: none;
+            }
+            .content {
+                background: #fff;
+                font-size: 60px;
+                width: 80%;
+                height: 300px;
+                text-align: center;
+                padding: 30px;
+                box-sizing: border-box;
+                border-radius: 10px;
+                position: relative;
+            }
+
+            .content .footer {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                display: flex;
+
+                border-top: 1px solid #000;
+            }
+            .content button {
+                width: 50%;
+                font-size: 40px;
+                padding: 30px;
+                background-color: #fff;
+            }
+            #btn_reset {
+                width: 100%;
+                height: 100px;
+                line-height: 100px;
+                background: cadetblue;
+                color: #fff;
+                font-size: 38px;
+            }
+        </style>
+    </head>
+    <body>
+        <ul id="person_list" onclick="show">
+            <% Object.keys(users).forEach(function (item) {%>
+            <li data-item="<%= item %>" data-name="<%= users[item] %>"><%= users[item] %></li>
+            <% }) %>
+        </ul>
+
+        <button id="btn_reset">重置</button>
+
+        <div id="dialog">
+            <div class="content">
+                <div id="dialog_title" class="title">是否签到</div>
+                <div class="footer">
+                    <button id="btn_cacel" style="border-right:1px solid #000;">取消</button>
+                    <button id="bth_confirm">确定</button>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script>
+        var personList = document.getElementById('person_list');
+        var id = '';
+        var name = '';
+        personList.onclick = function(event) {
+            id = event.target.getAttribute('data-item');
+            name = event.target.getAttribute('data-name');
+            if (!id) {
+                return;
+            }
+            document.getElementById('dialog_title').innerHTML = name + '是否签到';
+            document.getElementById('dialog').style.display = 'flex';
+        };
+
+        document.getElementById('btn_cacel').onclick = function cacel() {
+            console.log('取消');
+            document.getElementById('dialog').style.display = 'none';
+        };
+
+        document.getElementById('bth_confirm').onclick = function() {
+            console.log('确定');
+            webRequest({
+                method: 'POST',
+                url: '/reg',
+                data: {
+                    id: id
+                },
+                success(res) {
+                    console.log(res);
+                    window.location.reload();
+                }
+            });
+        };
+
+        document.getElementById('btn_reset').onclick = function() {
+            webRequest({
+                method: 'GET',
+                url: '/reset',
+                success(res) {
+                    console.log(res);
+                    window.location.reload();
+                }
+            });
+        };
+
+        function webRequest(opt) {
+            const { method, data, url, headers, success, fail } = opt;
+            const type = method.toUpperCase();
+            // var xhr = XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject();
+            var xhr = new XMLHttpRequest();
+            var dataArr = [];
+            for (var k in data) {
+                if (typeof data[k] !== 'undefined') {
+                    dataArr.push(`${k}=${data[k]}`);
+                }
+            }
+            if (type === 'GET') {
+                let fullUrl = dataArr.length
+                    ? (url + (url.indexOf('?') > -1 ? '&' : '?') + dataArr.join('&')).replace(/\?$/g, '')
+                    : url;
+                xhr.open(type, fullUrl, true);
+                for (var k in headers) {
+                    xhr.setRequestHeader(k, headers);
+                }
+                xhr.send();
+            } else if (type === 'POST') {
+                xhr.open(type, url, true);
+                // xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                for (var k in headers) {
+                    console.log(k);
+                    xhr.setRequestHeader(k, headers[k]);
+                }
+                // xhr.send(dataArr.join('&'));
+                xhr.send(JSON.stringify(data));
+            }
+            xhr.onload = function() {
+                var res = JSON.parse(xhr.responseText);
+                if (xhr.status === 200 || xhr.status === 304) {
+                    if (success && success instanceof Function) {
+                        success.call(xhr, res);
+                    }
+                } else {
+                    if (fail && fail instanceof Function) {
+                        fail.call(xhr, res);
+                    }
+                }
+            };
+        }
+    </script>
+</html>
