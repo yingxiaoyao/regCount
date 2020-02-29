@@ -1,15 +1,10 @@
 var express = require('express');
 var router = express.Router();
 
-/* GET home page. */
-// router.get('/', function(req, res, next) {
-//   res.render('index', { title: 'Express' });
-// });
-
 var person = require('./users');
 
 router.get('/', function(req, res, next) {
-    res.render('../views/index.html', {
+    res.render('../views//index.html', {
         users: person.get()
     });
 });
@@ -24,6 +19,14 @@ router.post('/reg', function(req, res, next) {
     res.send({
         success: true,
         id
+    });
+});
+router.post('/add', function(req, res, next) {
+    var name = req.body.name;
+    person.add(name);
+    res.send({
+        success: true,
+        name
     });
 });
 
